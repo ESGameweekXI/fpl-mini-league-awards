@@ -1,0 +1,155 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Roboto:wght@400;500&display=swap');
+
+:root {
+  --brand-primary: #021a16;
+  --brand-secondary: #00ffc2;
+  --brand-bg: #021a16;
+  --brand-text: #ffffff;
+  --brand-text-muted: #85ffe2;
+  --font-heading: 'Sora', sans-serif;
+  --font-body: 'Roboto', sans-serif;
+  --logo-url: none;
+  --logo-width: 120px;
+  --logo-height: 40px;
+}
+
+/* ── Award card (1080 × 1080 capture target) ── */
+.award-card {
+  width: 1080px;
+  height: 1080px;
+  background: var(--brand-bg);
+  color: var(--brand-text);
+  font-family: var(--font-body);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.award-card__bg-accent {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 70% 60% at 50% 100%,
+    rgba(0, 255, 194, 0.12) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+.award-card__logo {
+  position: absolute;
+  top: 56px;
+  left: 80px;
+  width: var(--logo-width);
+  height: var(--logo-height);
+  background: var(--logo-url) no-repeat center / contain;
+}
+
+.award-card__league-name {
+  position: absolute;
+  top: 56px;
+  right: 80px;
+  font-family: var(--font-body);
+  font-size: 28px;
+  color: var(--brand-text-muted);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.award-card__icon {
+  font-size: 120px;
+  line-height: 1;
+  margin-bottom: 32px;
+}
+
+.award-card__name {
+  font-family: var(--font-heading);
+  font-size: 72px;
+  font-weight: 800;
+  color: var(--brand-secondary);
+  text-align: center;
+  line-height: 1.1;
+  margin-bottom: 24px;
+  letter-spacing: -0.02em;
+}
+
+.award-card__winners {
+  font-family: var(--font-heading);
+  font-size: 56px;
+  font-weight: 700;
+  color: var(--brand-text);
+  text-align: center;
+  line-height: 1.2;
+  margin-bottom: 20px;
+}
+
+.award-card__stat {
+  font-family: var(--font-heading);
+  font-size: 40px;
+  font-weight: 600;
+  color: var(--brand-secondary);
+  text-align: center;
+  margin-bottom: 28px;
+  opacity: 0.9;
+}
+
+.award-card__description {
+  font-family: var(--font-body);
+  font-size: 32px;
+  color: var(--brand-text-muted);
+  text-align: center;
+  line-height: 1.5;
+  max-width: 840px;
+}
+
+.award-card__fallback-badge {
+  position: absolute;
+  bottom: 60px;
+  font-size: 24px;
+  color: rgba(255, 255, 255, 0.3);
+  font-family: var(--font-body);
+}
+
+/* ── Carousel display wrapper (scaled for screen) ── */
+.award-carousel-viewport {
+  width: 100%;
+  max-width: 500px;
+  aspect-ratio: 1;
+  position: relative;
+  margin: 0 auto;
+}
+
+.award-card-scaler {
+  width: 1080px;
+  height: 1080px;
+  transform-origin: top left;
+  /* scale set inline via JS */
+}
+
+/* ── Carousel controls ── */
+.carousel-dots {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.carousel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.2s;
+}
+
+.carousel-dot--active {
+  background: var(--brand-secondary);
+}
