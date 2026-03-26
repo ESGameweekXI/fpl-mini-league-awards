@@ -18,9 +18,15 @@ export async function GET(
     const upstream = await fetch(targetUrl, {
       headers: {
         'User-Agent':
-          'Mozilla/5.0 (compatible; FPLAwards/1.0)',
-        Accept: 'application/json',
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        Accept: 'application/json, text/plain, */*',
+        'Accept-Language': 'en-GB,en;q=0.9',
+        'Accept-Encoding': 'gzip, deflate, br',
         Referer: 'https://fantasy.premierleague.com/',
+        Origin: 'https://fantasy.premierleague.com',
+        'sec-fetch-site': 'same-origin',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-dest': 'empty',
       },
       next: { revalidate: 0 },
     });
