@@ -23,13 +23,16 @@ export default function AwardCarousel({
   );
   const touchStartX = useRef<number | null>(null);
 
+  const totalSlides = awards.length + 1; // 8 awards + CTA
+  const isCTA = current === awards.length;
+
   const prev = useCallback(
     () => setCurrent((c) => Math.max(0, c - 1)),
     []
   );
   const next = useCallback(
-    () => setCurrent((c) => Math.min(awards.length - 1, c + 1)),
-    [awards.length]
+    () => setCurrent((c) => Math.min(totalSlides - 1, c + 1)),
+    [totalSlides]
   );
 
   // Keyboard nav
@@ -42,9 +45,8 @@ export default function AwardCarousel({
     return () => window.removeEventListener('keydown', onKey);
   }, [prev, next]);
 
-  const award = awards[current];
-  // Plain object ref pointing at the current export card DOM node
-  const exportCardRef = { current: exportCardRefs.current[current] };
+  const award = !isCTA ? awards[current] : undefined;
+  const exportCardRef = { current: !isCTA ? exportCardRefs.current[current] : null };
 
   return (
     <div
@@ -112,7 +114,7 @@ export default function AwardCarousel({
             padding: '0 12px',
           }}
         >
-          {awards.map((_, i) => (
+          {Array.from({ length: totalSlides }).map((_, i) => (
             <div
               key={i}
               style={{
@@ -172,7 +174,7 @@ export default function AwardCarousel({
         />
         {/* Right tap zone */}
         <div
-          onClick={current < awards.length - 1 ? next : undefined}
+          onClick={current < totalSlides - 1 ? next : undefined}
           style={{
             position: 'absolute',
             right: 0,
@@ -180,14 +182,18 @@ export default function AwardCarousel({
             width: '33%',
             height: '100%',
             zIndex: 10,
-            cursor: current < awards.length - 1 ? 'pointer' : 'default',
+            cursor: current < totalSlides - 1 ? 'pointer' : 'default',
           }}
         />
 
-        <AwardCard award={award} leagueName={leagueName} mode="display" />
+        {isCTA ? (
+          <CTASlide />
+        ) : (
+          <AwardCard award={award!} leagueName={leagueName} mode="display" />
+        )}
       </div>
 
-      {/* ── Bottom bar: branding + share ── */}
+      {/* ── Bottom bar ── */}
       <div
         style={{
           flexShrink: 0,
@@ -199,42 +205,68 @@ export default function AwardCarousel({
           zIndex: 20,
         }}
       >
-        {/* Powered by Gameweek XI */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-          }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/gameweek-logo.png"
-            alt="Gameweek XI"
-            width={20}
-            height={20}
-            style={{ objectFit: 'contain' }}
-          />
-          <span
+        {isCTA ? (
+          <a
+            href="https://gameweekxi.com"
+            target="_blank"
+            rel="noopener noreferrer"
             style={{
-              color: 'var(--brand-text-muted)',
-              fontFamily: 'var(--font-body)',
-              fontSize: 12,
+              display: 'block',
+              width: '100%',
+              padding: '14px 24px',
+              borderRadius: 12,
+              background: 'var(--brand-secondary)',
+              color: 'var(--brand-primary)',
+              fontFamily: 'var(--font-heading)',
+              fontSize: 16,
+              fontWeight: 700,
+              textAlign: 'center',
+              textDecoration: 'none',
             }}
           >
-            Powered by Gameweek XI
-          </span>
-        </div>
+            Join Gameweek XI →
+          </a>
+        ) : (
+          <>
+            {/* Powered by Gameweek XI */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/gameweek-logo.png"
+                alt="Gameweek XI"
+                width={20}
+                height={20}
+                style={{ objectFit: 'contain' }}
+              />
+              <span
+                style={{
+                  color: 'var(--brand-text-muted)',
+                  fontFamily: 'var(--font-body)',
+                  fontSize: 12,
+                }}
+              >
+                Powered by Gameweek XI
+              </span>
+            </div>
 
-        <ShareButton
-          cardRef={exportCardRef}
-          awardId={award.id}
-          leagueName={leagueName}
-        />
+            <ShareButton
+              cardRef={exportCardRef}
+              awardId={award!.id}
+              leagueName={leagueName}
+            />
+          </>
+        )}
       </div>
 
       {/* ── Hidden 1080×1080 export cards for html2canvas ── */}
+      {/* (CTA slide has no export card) */}
       <div
         style={{
           position: 'absolute',
@@ -255,6 +287,66 @@ export default function AwardCarousel({
             }}
           />
         ))}
+      </div>
+    </div>
+  );
+}
+
+function CTASlide() {
+  return (
+    <div
+      style={{
+        flex: 1,
+        minHeight: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 'clamp(14px, 3.5vh, 28px)',
+        textAlign: 'center',
+        padding: '0 8px',
+      }}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/gameweek-logo.png"
+        alt="Gameweek XI"
+        width={80}
+        height={80}
+        style={{ objectFit: 'contain' }}
+      />
+      <div
+        style={{
+          fontFamily: 'var(--font-heading)',
+          fontSize: 'clamp(28px, 8vw, 56px)',
+          fontWeight: 800,
+          color: 'var(--brand-secondary)',
+          lineHeight: 1.1,
+          letterSpacing: '-0.02em',
+        }}
+      >
+        That&apos;s a wrap!
+      </div>
+      <div
+        style={{
+          fontFamily: 'var(--font-body)',
+          fontSize: 'clamp(14px, 4vw, 26px)',
+          color: 'var(--brand-text-muted)',
+          lineHeight: 1.5,
+          maxWidth: '75vw',
+        }}
+      >
+        Play FPL with the Gameweek XI community
+      </div>
+      <div
+        style={{
+          fontFamily: 'var(--font-body)',
+          fontSize: 'clamp(11px, 3vw, 18px)',
+          color: 'rgba(255,255,255,0.3)',
+          letterSpacing: '0.04em',
+        }}
+      >
+        gameweekxi.com
       </div>
     </div>
   );
