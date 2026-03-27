@@ -9,31 +9,19 @@ import '@/styles/awards.css';
 interface AwardCarouselProps {
   awards: AwardResult[];
   leagueName: string;
+  onReset?: () => void;
 }
 
 export default function AwardCarousel({
   awards,
   leagueName,
+  onReset,
 }: AwardCarouselProps) {
   const [current, setCurrent] = useState(0);
-  const [scale, setScale] = useState(1);
-  const viewportRef = useRef<HTMLDivElement>(null);
-  const cardRefs = useRef<Array<HTMLDivElement | null>>(
+  const exportCardRefs = useRef<Array<HTMLDivElement | null>>(
     Array(awards.length).fill(null)
   );
-
-  // Compute scale so the 1080px card fits the viewport
-  useEffect(() => {
-    function updateScale() {
-      if (!viewportRef.current) return;
-      const { width } = viewportRef.current.getBoundingClientRect();
-      setScale(width / 1080);
-    }
-    updateScale();
-    const ro = new ResizeObserver(updateScale);
-    if (viewportRef.current) ro.observe(viewportRef.current);
-    return () => ro.disconnect();
-  }, []);
+  const touchStartX = useRef<number | null>(null);
 
   const prev = useCallback(
     () => setCurrent((c) => Math.max(0, c - 1)),
@@ -41,10 +29,10 @@ export default function AwardCarousel({
   );
   const next = useCallback(
     () => setCurrent((c) => Math.min(awards.length - 1, c + 1)),
-  []
+    [awards.length]
   );
 
-  // Keyboard navigation
+  // Keyboard nav
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === 'ArrowLeft') prev();
@@ -55,108 +43,218 @@ export default function AwardCarousel({
   }, [prev, next]);
 
   const award = awards[current];
-  const cardRef = { current: cardRefs.current[current] };
+  // Plain object ref pointing at the current export card DOM node
+  const exportCardRef = { current: exportCardRefs.current[current] };
 
   return (
-    <div className="w-full flex flex-col items-center gap-4">
-      {/* Viewport */}
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        width: '100vw',
+        height: '100dvh',
+        background: 'var(--brand-bg)',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}
+    >
+      {/* ── Top bar: league name + progress dots + close ── */}
       <div
-        ref={viewportRef}
-        className="award-carousel-viewport w-full"
-        style={{ maxWidth: 500 }}
+        style={{
+          padding: '20px 20px 12px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 10,
+          flexShrink: 0,
+        }}
       >
-        <div
-          className="award-card-scaler"
-          style={{ transform: `scale(${scale})` }}
-        >
-          {awards.map((a, i) => (
-            <div
-              key={a.id}
-              style={{ display: i === current ? 'block' : 'none' }}
+        {/* League name row */}
+        <div style={{ position: 'relative', textAlign: 'center' }}>
+          <span
+            style={{
+              color: 'var(--brand-text-muted)',
+              fontFamily: 'var(--font-body)',
+              fontSize: 13,
+            }}
+          >
+            {leagueName}
+          </span>
+          {onReset && (
+            <button
+              onClick={onReset}
+              aria-label="Start over"
+              style={{
+                position: 'absolute',
+                right: 0,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                color: 'rgba(255,255,255,0.35)',
+                cursor: 'pointer',
+                fontSize: 18,
+                lineHeight: 1,
+                padding: 4,
+              }}
             >
-              <AwardCard
-                award={a}
-                leagueName={leagueName}
-                cardRef={(el) => {
-                  cardRefs.current[i] = el;
-                }}
-              />
-            </div>
-          ))}
+              ✕
+            </button>
+          )}
         </div>
-      </div>
 
-      {/* Controls row */}
-      <div className="flex items-center gap-4">
-        <button
-          onClick={prev}
-          disabled={current === 0}
-          aria-label="Previous award"
-          className="w-10 h-10 rounded-full flex items-center justify-center text-lg transition-all"
+        {/* Progress dots */}
+        <div
           style={{
-            background:
-              current === 0
-                ? 'rgba(255,255,255,0.05)'
-                : 'rgba(255,255,255,0.12)',
-            color: current === 0 ? 'rgba(255,255,255,0.2)' : '#fff',
-            border: 'none',
-            cursor: current === 0 ? 'default' : 'pointer',
+            display: 'flex',
+            gap: 4,
+            justifyContent: 'center',
+            padding: '0 12px',
           }}
         >
-          ‹
-        </button>
-
-        {/* Dots */}
-        <div className="carousel-dots">
           {awards.map((_, i) => (
-            <button
+            <div
               key={i}
-              onClick={() => setCurrent(i)}
-              aria-label={`Go to award ${i + 1}`}
-              className={`carousel-dot${i === current ? ' carousel-dot--active' : ''}`}
+              style={{
+                height: 3,
+                flex: 1,
+                maxWidth: 36,
+                borderRadius: 2,
+                background:
+                  i < current
+                    ? 'rgba(0,255,194,0.45)'
+                    : i === current
+                    ? 'var(--brand-secondary)'
+                    : 'rgba(255,255,255,0.2)',
+                transition: 'background 0.2s',
+              }}
             />
           ))}
         </div>
-
-        <button
-          onClick={next}
-          disabled={current === awards.length - 1}
-          aria-label="Next award"
-          className="w-10 h-10 rounded-full flex items-center justify-center text-lg transition-all"
-          style={{
-            background:
-              current === awards.length - 1
-                ? 'rgba(255,255,255,0.05)'
-                : 'rgba(255,255,255,0.12)',
-            color:
-              current === awards.length - 1
-                ? 'rgba(255,255,255,0.2)'
-                : '#fff',
-            border: 'none',
-            cursor:
-              current === awards.length - 1 ? 'default' : 'pointer',
-          }}
-        >
-          ›
-        </button>
       </div>
 
-      {/* Counter + share */}
-      <div className="flex items-center gap-4">
-        <span
+      {/* ── Card content area (flex: 1, no scroll) ── */}
+      <div
+        style={{
+          flex: 1,
+          minHeight: 0,
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          padding: '0 24px',
+        }}
+        onTouchStart={(e) => {
+          touchStartX.current = e.touches[0].clientX;
+        }}
+        onTouchEnd={(e) => {
+          if (touchStartX.current === null) return;
+          const dx =
+            e.changedTouches[0].clientX - touchStartX.current;
+          if (Math.abs(dx) > 40) {
+            if (dx < 0) next();
+            else prev();
+          }
+          touchStartX.current = null;
+        }}
+      >
+        {/* Left tap zone */}
+        <div
+          onClick={current > 0 ? prev : undefined}
           style={{
-            color: 'var(--brand-text-muted)',
-            fontFamily: 'var(--font-body)',
-            fontSize: 14,
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            width: '33%',
+            height: '100%',
+            zIndex: 10,
+            cursor: current > 0 ? 'pointer' : 'default',
+          }}
+        />
+        {/* Right tap zone */}
+        <div
+          onClick={current < awards.length - 1 ? next : undefined}
+          style={{
+            position: 'absolute',
+            right: 0,
+            top: 0,
+            width: '33%',
+            height: '100%',
+            zIndex: 10,
+            cursor: current < awards.length - 1 ? 'pointer' : 'default',
+          }}
+        />
+
+        <AwardCard award={award} leagueName={leagueName} mode="display" />
+      </div>
+
+      {/* ── Bottom bar: branding + share ── */}
+      <div
+        style={{
+          flexShrink: 0,
+          padding: '10px 24px 36px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 12,
+          position: 'relative',
+          zIndex: 20,
+        }}
+      >
+        {/* Powered by Gameweek XI */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
           }}
         >
-          {current + 1} / {awards.length}
-        </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/gameweek-logo.png"
+            alt="Gameweek XI"
+            width={20}
+            height={20}
+            style={{ objectFit: 'contain' }}
+          />
+          <span
+            style={{
+              color: 'var(--brand-text-muted)',
+              fontFamily: 'var(--font-body)',
+              fontSize: 12,
+            }}
+          >
+            Powered by Gameweek XI
+          </span>
+        </div>
+
         <ShareButton
-          cardRef={cardRef}
+          cardRef={exportCardRef}
           awardId={award.id}
           leagueName={leagueName}
         />
+      </div>
+
+      {/* ── Hidden 1080×1080 export cards for html2canvas ── */}
+      <div
+        style={{
+          position: 'absolute',
+          left: -9999,
+          top: -9999,
+          pointerEvents: 'none',
+          overflow: 'hidden',
+        }}
+      >
+        {awards.map((a, i) => (
+          <AwardCard
+            key={a.id}
+            award={a}
+            leagueName={leagueName}
+            mode="export"
+            cardRef={(el) => {
+              exportCardRefs.current[i] = el;
+            }}
+          />
+        ))}
       </div>
     </div>
   );

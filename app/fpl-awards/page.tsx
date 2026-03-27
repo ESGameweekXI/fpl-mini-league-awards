@@ -413,38 +413,7 @@ function AwardsScreen({
   onReset: () => void;
 }) {
   return (
-    <div className="flex flex-col items-center gap-6 w-full max-w-lg">
-      <div className="text-center">
-        <h1
-          className="text-3xl font-extrabold"
-          style={{ fontFamily: 'var(--font-heading)', color: 'var(--brand-secondary)' }}
-        >
-          {leagueName}
-        </h1>
-        <p
-          className="text-sm mt-1"
-          style={{ color: 'var(--brand-text-muted)', fontFamily: 'var(--font-body)' }}
-        >
-          {results.length} awards — swipe or use arrow keys
-        </p>
-      </div>
-
-      <AwardCarousel awards={results} leagueName={leagueName} />
-
-      <button
-        onClick={onReset}
-        className="text-sm mt-2"
-        style={{
-          color: 'rgba(255,255,255,0.4)',
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          fontFamily: 'var(--font-body)',
-        }}
-      >
-        ← Start over
-      </button>
-    </div>
+    <AwardCarousel awards={results} leagueName={leagueName} onReset={onReset} />
   );
 }
 

@@ -78,15 +78,21 @@ export default function ShareButton({
     <button
       onClick={handleShare}
       disabled={sharing}
-      className="px-6 py-2 rounded-full text-sm font-semibold transition-all"
       style={{
+        width: '100%',
+        padding: '14px 24px',
+        borderRadius: 12,
+        border: 'none',
         background: sharing ? 'rgba(0,255,194,0.4)' : 'var(--brand-secondary)',
         color: 'var(--brand-primary)',
+        fontFamily: 'var(--font-heading)',
+        fontSize: 16,
+        fontWeight: 700,
         cursor: sharing ? 'wait' : 'pointer',
-        border: 'none',
+        transition: 'background 0.15s',
       }}
     >
-      {sharing ? 'Saving…' : '↗ Share'}
+      {sharing ? 'Saving…' : '↗ Share / Download'}
     </button>
   );
 }
