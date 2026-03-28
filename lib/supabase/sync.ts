@@ -87,8 +87,13 @@ async function chunkedUpsert(
   onConflict: string,
   chunkSize = 500
 ) {
+  const totalChunks = Math.ceil(rows.length / chunkSize);
+  console.log(`[chunkedUpsert] ${table}: ${rows.length} rows → ${totalChunks} chunk(s)`);
   for (let i = 0; i < rows.length; i += chunkSize) {
-    await mustUpsert(table, rows.slice(i, i + chunkSize), onConflict);
+    const chunk = rows.slice(i, i + chunkSize);
+    const chunkIndex = Math.floor(i / chunkSize) + 1;
+    console.log(`[chunkedUpsert] ${table}: chunk ${chunkIndex}/${totalChunks} (${chunk.length} rows)`);
+    await mustUpsert(table, chunk, onConflict);
   }
 }
 
@@ -281,12 +286,15 @@ export async function syncLeague(
 
   for (const managerId of managerIds) {
     const startedEvent = startedEvents[managerId] ?? 1;
+    console.log(`[picks] manager ${managerId}: startedEvent=${startedEvent} (${startedEvents[managerId] === undefined ? 'defaulted' : 'from history'})`);
     for (const gw of finishedGws) {
       if (gw < startedEvent) continue;
       picksMeta.push({ managerId, gw });
       picksPaths.push(`entry/${managerId}/event/${gw}/picks/`);
     }
   }
+
+  console.log(`[picks] queued ${picksPaths.length} fetch requests for ${managerIds.length} managers across ${finishedGws.length} finished GWs`);
 
   const picksResults = await batchFetchDirect<GWPicks>(
     picksPaths,
@@ -298,11 +306,22 @@ export async function syncLeague(
       )
   );
 
+  let nullCount = 0;
+  let emptyCount = 0;
   const pickRows: object[] = [];
   for (let i = 0; i < picksMeta.length; i++) {
     const { managerId, gw } = picksMeta[i];
     const gwPicks = picksResults[i];
-    if (!gwPicks) continue;
+    if (!gwPicks) {
+      nullCount++;
+      console.warn(`[picks] null result for manager ${managerId} GW${gw} (fetch failed)`);
+      continue;
+    }
+    if (gwPicks.picks.length === 0) {
+      emptyCount++;
+      console.warn(`[picks] empty picks array for manager ${managerId} GW${gw}`);
+      continue;
+    }
     for (const pick of gwPicks.picks) {
       pickRows.push({
         manager_id: managerId,
@@ -315,6 +334,8 @@ export async function syncLeague(
       });
     }
   }
+
+  console.log(`[picks] summary: ${picksMeta.length} expected, ${nullCount} null fetches, ${emptyCount} empty arrays, ${pickRows.length} rows to upsert`);
 
   await chunkedUpsert('manager_picks', pickRows, 'manager_id,event,element');
 
