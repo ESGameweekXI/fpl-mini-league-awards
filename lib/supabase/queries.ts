@@ -54,19 +54,22 @@ export async function getLeagueManagers(
       .from('manager_history')
       .select('manager_id, event, points, total_points, rank, overall_rank')
       .in('manager_id', managerIds)
-      .order('event', { ascending: true }),
+      .order('event', { ascending: true })
+      .limit(10000),
     supabase
       .from('manager_picks')
       .select(
         'manager_id, event, element, position, multiplier, is_captain, is_vice_captain'
       )
-      .in('manager_id', managerIds),
+      .in('manager_id', managerIds)
+      .limit(10000),
     supabase
       .from('manager_transfers')
       .select(
         'manager_id, event, element_in, element_in_cost, element_out, element_out_cost, time'
       )
-      .in('manager_id', managerIds),
+      .in('manager_id', managerIds)
+      .limit(10000),
   ]);
 
   if (managersRes.error) throw new Error(`managers query: ${managersRes.error.message}`);
