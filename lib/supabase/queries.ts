@@ -46,6 +46,8 @@ export async function getLeagueManagers(
   console.log(`[getLeagueManagers] querying ${managerIds.length} manager IDs:`, managerIds);
 
   // 2. Fetch manager details, history, picks, transfers in parallel
+  // .range(0, 19999) explicitly overrides Supabase's default 1000-row cap
+  console.log(`[getLeagueManagers] fetching picks for ${managerIds.length} managers with range(0, 19999)`);
   const [managersRes, historyRes, picksRes, transfersRes] = await Promise.all([
     supabase
       .from('managers')
@@ -56,22 +58,23 @@ export async function getLeagueManagers(
       .select('manager_id, event, points, total_points, rank, overall_rank')
       .in('manager_id', managerIds)
       .order('event', { ascending: true })
-      .limit(10000),
+      .range(0, 19999),
     supabase
       .from('manager_picks')
       .select(
         'manager_id, event, element, position, multiplier, is_captain, is_vice_captain'
       )
       .in('manager_id', managerIds)
-      .limit(10000),
+      .range(0, 19999),
     supabase
       .from('manager_transfers')
       .select(
         'manager_id, event, element_in, element_in_cost, element_out, element_out_cost, time'
       )
       .in('manager_id', managerIds)
-      .limit(10000),
+      .range(0, 19999),
   ]);
+  console.log(`[getLeagueManagers] picks raw row count: ${picksRes.data?.length ?? 'null'}, error: ${picksRes.error?.message ?? 'none'}`);
 
   if (managersRes.error) throw new Error(`managers query: ${managersRes.error.message}`);
   if (historyRes.error)  throw new Error(`history query: ${historyRes.error.message}`);
