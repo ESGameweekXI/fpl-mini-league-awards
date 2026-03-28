@@ -43,6 +43,7 @@ export async function getLeagueManagers(
   if (!lmRows?.length) return [];
 
   const managerIds = lmRows.map((r) => r.manager_id as number);
+  console.log(`[getLeagueManagers] querying ${managerIds.length} manager IDs:`, managerIds);
 
   // 2. Fetch manager details, history, picks, transfers in parallel
   const [managersRes, historyRes, picksRes, transfersRes] = await Promise.all([
@@ -80,6 +81,13 @@ export async function getLeagueManagers(
   const allHistory   = historyRes.data   ?? [];
   const allPicks     = picksRes.data     ?? [];
   const allTransfers = transfersRes.data ?? [];
+
+  const uniquePicksManagerIds = new Set(allPicks.map((p) => p.manager_id));
+  console.log(`[getLeagueManagers] picks query returned ${allPicks.length} rows across ${uniquePicksManagerIds.size}/${managerIds.length} managers`);
+  if (uniquePicksManagerIds.size < managerIds.length) {
+    const missing = managerIds.filter((id) => !uniquePicksManagerIds.has(id));
+    console.warn(`[getLeagueManagers] picks missing for manager IDs:`, missing);
+  }
 
   return (managersRes.data ?? []).map((m) => {
     const manager: Manager = {
