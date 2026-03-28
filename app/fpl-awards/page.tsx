@@ -189,10 +189,10 @@ function InputScreen({
             color: 'var(--brand-secondary)',
           }}
         >
-          FPL Awards
+          FPL Mini-League Awards
         </h1>
         <p style={{ color: 'var(--brand-text-muted)', fontFamily: 'var(--font-body)' }}>
-          Spotify Wrapped for your mini-league
+          Drop in your team ID, choose your mini-league and let the awards ceremony begin
         </p>
       </div>
 
@@ -225,7 +225,7 @@ function InputScreen({
           style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-body)' }}
         >
           Find it in the URL when you visit the FPL website: fantasy.premierleague.com/entry/
-          <strong>XXXXXXX</strong>/event/1
+          <strong>XXXXXXX</strong>
         </p>
       </div>
 
