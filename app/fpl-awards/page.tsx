@@ -4,7 +4,6 @@ import { useState, useCallback } from 'react';
 import { fetchFPL, batchFetch } from '@/lib/fpl/fetcher';
 import { clearBootstrapCache } from '@/lib/fpl/bootstrap';
 import { computeAwardsFromManagerData } from '@/lib/awards';
-import { getLeagueManagers } from '@/lib/supabase/queries';
 import {
   EntryData,
   ClassicLeague,
@@ -12,6 +11,7 @@ import {
   Bootstrap,
   GWLive,
   AwardResult,
+  ManagerData,
 } from '@/lib/fpl/types';
 import AwardCarousel from '@/components/awards/AwardCarousel';
 import '@/styles/awards.css';
@@ -150,9 +150,11 @@ export default function FplAwardsPage() {
           }
         }
 
-        // 3. Load manager data from Supabase (80 → 85%)
+        // 3. Load manager data from Supabase via server route (80 → 85%)
         tick(0.82, 'Loading league data…');
-        const managers = await getLeagueManagers(leagueId);
+        const leagueDataRes = await fetch(`/api/league-data?leagueId=${leagueId}`);
+        if (!leagueDataRes.ok) throw new Error('Failed to load league data.');
+        const { managers } = (await leagueDataRes.json()) as { managers: ManagerData[] };
         if (managers.length === 0) {
           throw new Error('No manager data found. Try syncing again.');
         }

@@ -1,4 +1,4 @@
-import { supabase } from './client';
+import { supabaseServer as supabase } from './server-client';
 import type {
   Manager,
   ManagerData,
