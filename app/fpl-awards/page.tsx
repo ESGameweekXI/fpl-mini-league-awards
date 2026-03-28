@@ -176,6 +176,11 @@ export default function FplAwardsPage() {
           gwLiveMap[gw] = gwLiveResults[i];
         });
 
+        const nullLive = gwLiveResults.filter((r) => r === null).length;
+        console.log(
+          `[gwLive] fetched ${finishedGws.length} finished GWs: ${gwLiveResults.length - nullLive} successful, ${nullLive} null`
+        );
+
         // 5. Compute awards (96 → 100%)
         tick(0.97, 'Calculating awards…');
         const results = computeAwardsFromManagerData(

@@ -45,6 +45,10 @@ export function calcBenchWarmer(
       hasFallback = true;
     }
 
+    console.log(
+      `[benchWarmer] ${md.manager.teamName} (${md.manager.name}): ${totalBenchPoints} bench pts (missed ${missedGws}/${relevantGws.length} GWs)`
+    );
+
     if (totalBenchPoints > maxPoints) {
       maxPoints = totalBenchPoints;
       winners = [md.manager];
