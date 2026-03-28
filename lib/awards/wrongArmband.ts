@@ -14,10 +14,7 @@ export function calcWrongArmband(
   let hasFallback = false;
 
   for (const md of managers) {
-    if (!md.history) {
-      hasFallback = true;
-      continue;
-    }
+    if (!md.history) continue;
 
     let wrongGws = 0;
     let missedGws = 0;
@@ -58,7 +55,7 @@ export function calcWrongArmband(
 
     if (
       relevantGws.length > 0 &&
-      missedGws / relevantGws.length > 0.5
+      missedGws / relevantGws.length > 0.2
     ) {
       hasFallback = true;
     }

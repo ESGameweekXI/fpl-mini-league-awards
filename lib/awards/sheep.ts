@@ -59,10 +59,6 @@ export function calcSheep(
     }
   }
 
-  if (managers.some((m) => m.picks && Object.keys(m.picks).length === 0)) {
-    hasFallback = true;
-  }
-
   let maxCount = -1;
   let winners: Manager[] = [];
 

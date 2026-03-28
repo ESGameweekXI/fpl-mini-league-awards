@@ -13,10 +13,7 @@ export function calcCaptainKiller(
   let hasFallback = false;
 
   for (const md of managers) {
-    if (!md.history) {
-      hasFallback = true;
-      continue;
-    }
+    if (!md.history) continue;
 
     let killerGws = 0;
     let missedGws = 0;
@@ -47,7 +44,7 @@ export function calcCaptainKiller(
 
     if (
       relevantGws.length > 0 &&
-      missedGws / relevantGws.length > 0.5
+      missedGws / relevantGws.length > 0.2
     ) {
       hasFallback = true;
     }

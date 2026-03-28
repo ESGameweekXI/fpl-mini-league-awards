@@ -13,7 +13,7 @@ export function calcMoneyPit(
   const playerMap = new Map(bootstrap.elements.map((p) => [p.id, p]));
   let maxSpent = -1;
   let winners: Manager[] = [];
-  const hasFallback = managers.some((m) => m.transfers === null);
+  let hasFallback = false;
 
   for (const md of managers) {
     const transfers = md.transfers ?? [];
