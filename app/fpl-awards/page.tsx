@@ -1,10 +1,18 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { fetchFPL } from '@/lib/fpl/fetcher';
+import { fetchFPL, batchFetch } from '@/lib/fpl/fetcher';
 import { clearBootstrapCache } from '@/lib/fpl/bootstrap';
-import { computeAllAwards } from '@/lib/awards';
-import { EntryData, ClassicLeague, LeagueStandings, AwardResult } from '@/lib/fpl/types';
+import { computeAwardsFromManagerData } from '@/lib/awards';
+import { getLeagueManagers } from '@/lib/supabase/queries';
+import {
+  EntryData,
+  ClassicLeague,
+  LeagueStandings,
+  Bootstrap,
+  GWLive,
+  AwardResult,
+} from '@/lib/fpl/types';
 import AwardCarousel from '@/components/awards/AwardCarousel';
 import '@/styles/awards.css';
 
@@ -77,27 +85,106 @@ export default function FplAwardsPage() {
   }, [teamId]);
 
   const handleLeagueSelect = useCallback(
-    async (leagueId: number, leagueName: string, teamId: number) => {
+    async (leagueId: number, leagueName: string, _teamId: number) => {
+      const tick = (progress: number, status: string) =>
+        setStage((prev) =>
+          prev.type === 'loading-awards' ? { ...prev, progress, status } : prev
+        );
+
       setStage({
         type: 'loading-awards',
         leagueId,
         leagueName,
         progress: 0,
-        status: 'Starting…',
+        status: 'Checking cache…',
       });
 
       try {
-        const results = await computeAllAwards(
-          teamId,
-          leagueId,
-          (progress, status) => {
-            setStage((prev) =>
-              prev.type === 'loading-awards'
-                ? { ...prev, progress, status }
-                : prev
-            );
-          }
+        // 1. Check whether cached data is fresh
+        const statusRes = await fetch(
+          `/api/league-status?leagueId=${leagueId}`
         );
+        if (!statusRes.ok) throw new Error('Could not check league cache.');
+        const { stale } = (await statusRes.json()) as { stale: boolean };
+
+        // 2. If stale, stream a sync from FPL → Supabase (0 → 80%)
+        if (stale) {
+          tick(0.01, 'Syncing league data…');
+
+          const syncRes = await fetch('/api/sync-league', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ leagueId }),
+          });
+          if (!syncRes.ok || !syncRes.body) {
+            throw new Error('Sync request failed.');
+          }
+
+          const reader = syncRes.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = '';
+
+          outer: while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+
+            let nl: number;
+            while ((nl = buffer.indexOf('\n')) !== -1) {
+              const line = buffer.slice(0, nl).trim();
+              buffer = buffer.slice(nl + 1);
+              if (!line) continue;
+
+              const chunk = JSON.parse(line) as {
+                pct?: number;
+                message?: string;
+                error?: string;
+              };
+
+              if (chunk.error) throw new Error(chunk.error);
+              if (chunk.pct !== undefined && chunk.message) {
+                tick((chunk.pct / 100) * 0.8, chunk.message);
+              }
+              if (chunk.pct === 100) break outer;
+            }
+          }
+        }
+
+        // 3. Load manager data from Supabase (80 → 85%)
+        tick(0.82, 'Loading league data…');
+        const managers = await getLeagueManagers(leagueId);
+        if (managers.length === 0) {
+          throw new Error('No manager data found. Try syncing again.');
+        }
+
+        // 4. Fetch bootstrap + GW live scores (85 → 96%)
+        tick(0.86, 'Fetching gameweek data…');
+        const bootstrap = await fetchFPL<Bootstrap>('bootstrap-static/');
+        const finishedGws = bootstrap.events
+          .filter((e) => e.finished)
+          .map((e) => e.id);
+
+        const gwLivePaths = finishedGws.map((gw) => `event/${gw}/live/`);
+        const gwLiveResults = await batchFetch<GWLive>(
+          gwLivePaths,
+          10,
+          (p) => tick(0.86 + p * 0.1, 'Fetching live scores…')
+        );
+
+        const gwLiveMap: Record<number, GWLive | null> = {};
+        finishedGws.forEach((gw, i) => {
+          gwLiveMap[gw] = gwLiveResults[i];
+        });
+
+        // 5. Compute awards (96 → 100%)
+        tick(0.97, 'Calculating awards…');
+        const results = computeAwardsFromManagerData(
+          managers,
+          bootstrap,
+          gwLiveMap,
+          finishedGws
+        );
+
         setStage({ type: 'awards', results, leagueName });
       } catch (err) {
         setStage({

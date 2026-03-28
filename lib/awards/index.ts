@@ -6,6 +6,7 @@ import {
   ManagerHistory,
   GWPicks,
   Transfer,
+  Bootstrap,
   GWLive,
   ManagerData,
   AllData,
@@ -195,4 +196,38 @@ export async function computeAllAwards(
   onProgress?.(1, 'Done!');
 
   return awards;
+}
+
+/**
+ * Run all 8 award calculators against pre-loaded data (e.g. from Supabase).
+ * No network calls — callers are responsible for supplying bootstrap, GW live
+ * data, and manager data before calling this.
+ */
+export function computeAwardsFromManagerData(
+  managers: ManagerData[],
+  bootstrap: Bootstrap,
+  gwLive: Record<number, GWLive | null>,
+  finishedGws: number[]
+): AwardResult[] {
+  const viableManagers = managers.filter((md) => {
+    const relevantGws = finishedGws.filter((gw) => gw >= md.startedEvent);
+    return relevantGws.length >= 5;
+  });
+
+  if (viableManagers.length === 0) {
+    throw new Error(
+      'Not enough data — managers need at least 5 gameweeks to generate awards.'
+    );
+  }
+
+  return [
+    calcBenchWarmer(viableManagers, gwLive, finishedGws),
+    calcRevolvingDoor(viableManagers),
+    calcWrongArmband(viableManagers, gwLive, finishedGws),
+    calcCaptainKiller(viableManagers, gwLive, finishedGws),
+    calcSheep(viableManagers, finishedGws),
+    calcSniper(viableManagers),
+    calcLoyalist(viableManagers),
+    calcMoneyPit(viableManagers, bootstrap),
+  ];
 }
