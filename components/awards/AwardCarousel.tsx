@@ -336,17 +336,19 @@ function CTASlide() {
           maxWidth: '75vw',
         }}
       >
-        Play FPL with the Gameweek XI community
+        Awards are fun. Winning money is better.
       </div>
       <div
         style={{
           fontFamily: 'var(--font-body)',
-          fontSize: 'clamp(11px, 3vw, 18px)',
-          color: 'rgba(255,255,255,0.3)',
-          letterSpacing: '0.04em',
+          fontSize: 'clamp(13px, 3.5vw, 22px)',
+          color: 'var(--brand-text-muted)',
+          lineHeight: 1.5,
+          maxWidth: '75vw',
+          opacity: 0.75,
         }}
       >
-        gameweekxi.com
+        Take your mini-league to Gameweek XI, play for cash every week.
       </div>
     </div>
   );
