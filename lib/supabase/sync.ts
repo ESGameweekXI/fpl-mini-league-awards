@@ -298,7 +298,7 @@ export async function syncLeague(
 
   const picksResults = await batchFetchDirect<GWPicks>(
     picksPaths,
-    10,
+    5,
     (done, total) =>
       onProgress?.(
         42 + (done / total) * 58,
