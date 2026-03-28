@@ -43,11 +43,9 @@ export async function getLeagueManagers(
   if (!lmRows?.length) return [];
 
   const managerIds = lmRows.map((r) => r.manager_id as number);
-  console.log(`[getLeagueManagers] querying ${managerIds.length} manager IDs:`, managerIds);
 
   // 2. Fetch manager details, history, picks, transfers in parallel
   // .range(0, 19999) explicitly overrides Supabase's default 1000-row cap
-  console.log(`[getLeagueManagers] fetching picks for ${managerIds.length} managers with range(0, 19999)`);
   const [managersRes, historyRes, picksRes, transfersRes] = await Promise.all([
     supabase
       .from('managers')
@@ -74,7 +72,6 @@ export async function getLeagueManagers(
       .in('manager_id', managerIds)
       .range(0, 19999),
   ]);
-  console.log(`[getLeagueManagers] picks raw row count: ${picksRes.data?.length ?? 'null'}, error: ${picksRes.error?.message ?? 'none'}`);
 
   if (managersRes.error) throw new Error(`managers query: ${managersRes.error.message}`);
   if (historyRes.error)  throw new Error(`history query: ${historyRes.error.message}`);
@@ -84,13 +81,6 @@ export async function getLeagueManagers(
   const allHistory   = historyRes.data   ?? [];
   const allPicks     = picksRes.data     ?? [];
   const allTransfers = transfersRes.data ?? [];
-
-  const uniquePicksManagerIds = new Set(allPicks.map((p) => p.manager_id));
-  console.log(`[getLeagueManagers] picks query returned ${allPicks.length} rows across ${uniquePicksManagerIds.size}/${managerIds.length} managers`);
-  if (uniquePicksManagerIds.size < managerIds.length) {
-    const missing = managerIds.filter((id) => !uniquePicksManagerIds.has(id));
-    console.warn(`[getLeagueManagers] picks missing for manager IDs:`, missing);
-  }
 
   return (managersRes.data ?? []).map((m) => {
     const manager: Manager = {
