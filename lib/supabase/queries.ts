@@ -91,13 +91,13 @@ export async function getLeagueManagers(
     const startedEvent: number = m.started_event ?? 1;
 
     // Build ManagerHistory
-    const historyRows = allHistory.filter((h) => h.manager_id === m.id);
+    const historyRows = allHistory.filter((h) => Number(h.manager_id) === m.id);
     const history: ManagerHistory = {
       current: historyRows.map((h) => ({
-        event: h.event,
-        points: h.points,
-        total_points: h.total_points,
-        rank: h.rank ?? 0,
+        event: Number(h.event),
+        points: Number(h.points),
+        total_points: Number(h.total_points),
+        rank: h.rank != null ? Number(h.rank) : 0,
         // These fields aren't stored in the DB; award calculators don't need them
         event_transfers: 0,
         event_transfers_cost: 0,
@@ -108,14 +108,15 @@ export async function getLeagueManagers(
     };
 
     // Build picks map (Record<gw, GWPicks>)
-    const picksRows = allPicks.filter((p) => p.manager_id === m.id);
+    const picksRows = allPicks.filter((p) => Number(p.manager_id) === m.id);
     const picksMap: Record<number, GWPicks> = {};
     for (const row of picksRows) {
-      if (!picksMap[row.event]) {
-        picksMap[row.event] = {
+      const gw = Number(row.event);
+      if (!picksMap[gw]) {
+        picksMap[gw] = {
           active_chip: null,
           entry_history: {
-            event: row.event,
+            event: gw,
             points: 0,
             total_points: 0,
             event_transfers: 0,
@@ -125,10 +126,10 @@ export async function getLeagueManagers(
           picks: [],
         };
       }
-      picksMap[row.event].picks.push({
-        element: row.element,
-        position: row.position,
-        multiplier: row.multiplier,
+      picksMap[gw].picks.push({
+        element: Number(row.element),
+        position: Number(row.position),
+        multiplier: Number(row.multiplier),
         is_captain: row.is_captain,
         is_vice_captain: row.is_vice_captain,
       });
