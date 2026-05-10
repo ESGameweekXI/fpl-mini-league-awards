@@ -21,6 +21,7 @@ export default function AwardCarousel({
   const exportCardRefs = useRef<Array<HTMLDivElement | null>>(
     Array(awards.length).fill(null)
   );
+  const ctaShareCardRef = useRef<HTMLDivElement | null>(null);
   const touchStartX = useRef<number | null>(null);
 
   const totalSlides = awards.length + 1; // 8 awards + CTA
@@ -206,26 +207,7 @@ export default function AwardCarousel({
         }}
       >
         {isCTA ? (
-          <a
-            href="https://gameweekxi.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: 'block',
-              width: '100%',
-              padding: '14px 24px',
-              borderRadius: 12,
-              background: 'var(--brand-secondary)',
-              color: 'var(--brand-primary)',
-              fontFamily: 'var(--font-heading)',
-              fontSize: 16,
-              fontWeight: 700,
-              textAlign: 'center',
-              textDecoration: 'none',
-            }}
-          >
-            Join Gameweek XI →
-          </a>
+          <CTAShareButton cardRef={ctaShareCardRef} />
         ) : (
           <>
             {/* Powered by Gameweek XI */}
@@ -265,8 +247,7 @@ export default function AwardCarousel({
         )}
       </div>
 
-      {/* ── Hidden 1080×1080 export cards for html2canvas ── */}
-      {/* (CTA slide has no export card) */}
+      {/* ── Hidden off-screen cards for html2canvas ── */}
       <div
         style={{
           position: 'absolute',
@@ -276,6 +257,7 @@ export default function AwardCarousel({
           overflow: 'hidden',
         }}
       >
+        {/* Award export cards */}
         {awards.map((a, i) => (
           <AwardCard
             key={a.id}
@@ -287,10 +269,72 @@ export default function AwardCarousel({
             }}
           />
         ))}
+
+        {/* CTA share card */}
+        <div
+          ref={ctaShareCardRef}
+          className="award-card"
+          style={{
+            background: '#021A16',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 40,
+            padding: '80px 100px',
+            textAlign: 'center',
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/gameweek-logo.png"
+            alt="Gameweek XI"
+            width={120}
+            height={120}
+            style={{ objectFit: 'contain' }}
+          />
+          <div>
+            <div
+              style={{
+                fontFamily: 'Sora, sans-serif',
+                fontSize: 80,
+                fontWeight: 800,
+                color: '#00FFC2',
+                lineHeight: 1.1,
+                letterSpacing: '-0.02em',
+                marginBottom: 24,
+              }}
+            >
+              FPL Mini League Awards
+            </div>
+            <div
+              style={{
+                fontFamily: 'Roboto, sans-serif',
+                fontSize: 40,
+                color: '#85FFE2',
+                lineHeight: 1.4,
+              }}
+            >
+              See how your mini-league stacks up
+            </div>
+          </div>
+          <div
+            style={{
+              fontFamily: 'Roboto, sans-serif',
+              fontSize: 28,
+              color: 'rgba(133,255,226,0.5)',
+              marginTop: 20,
+            }}
+          >
+            fpl-mini-league-awards.vercel.app
+          </div>
+        </div>
       </div>
     </div>
   );
 }
+
+// ── CTASlide ──────────────────────────────────────────────────────
 
 function CTASlide() {
   return (
@@ -302,7 +346,7 @@ function CTASlide() {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 'clamp(14px, 3.5vh, 28px)',
+        gap: 'clamp(12px, 3vh, 24px)',
         textAlign: 'center',
         padding: '0 8px',
       }}
@@ -311,8 +355,8 @@ function CTASlide() {
       <img
         src="/gameweek-logo.png"
         alt="Gameweek XI"
-        width={80}
-        height={80}
+        width={60}
+        height={60}
         style={{ objectFit: 'contain' }}
       />
       <div
@@ -330,26 +374,140 @@ function CTASlide() {
       <div
         style={{
           fontFamily: 'var(--font-body)',
-          fontSize: 'clamp(14px, 4vw, 26px)',
+          fontSize: 'clamp(16px, 4.5vw, 28px)',
           color: 'var(--brand-text-muted)',
-          lineHeight: 1.5,
-          maxWidth: '75vw',
+          lineHeight: 1.4,
         }}
       >
-        Awards are fun. Winning money is better.
+        Share with your friends
       </div>
       <div
         style={{
           fontFamily: 'var(--font-body)',
-          fontSize: 'clamp(13px, 3.5vw, 22px)',
+          fontSize: 'clamp(12px, 3.2vw, 18px)',
           color: 'var(--brand-text-muted)',
           lineHeight: 1.5,
-          maxWidth: '75vw',
-          opacity: 0.75,
+          maxWidth: '72vw',
+          opacity: 0.65,
         }}
       >
-        Take your mini-league to Gameweek XI, play for cash every week.
+        Share &amp; follow @GameweekXI on X to win a football shirt 🎽
       </div>
+    </div>
+  );
+}
+
+// ── CTAShareButton ────────────────────────────────────────────────
+
+type ShareLabel = 'idle' | 'loading' | 'copied';
+
+const CTA_URL = 'https://fpl-mini-league-awards.vercel.app';
+
+function CTAShareButton({
+  cardRef,
+}: {
+  cardRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  const [label, setLabel] = useState<ShareLabel>('idle');
+
+  const handleShare = useCallback(async () => {
+    if (label === 'loading') return;
+    setLabel('loading');
+
+    const copyAndFeedback = async () => {
+      try {
+        await navigator.clipboard.writeText(CTA_URL);
+        setLabel('copied');
+        setTimeout(() => setLabel('idle'), 2000);
+      } catch {
+        setLabel('idle');
+      }
+    };
+
+    try {
+      let file: File | undefined;
+
+      if (cardRef.current) {
+        await document.fonts.ready;
+        const html2canvas = (await import('html2canvas')).default;
+        const canvas = await html2canvas(cardRef.current, {
+          width: 1080,
+          height: 1080,
+          useCORS: true,
+          background: '#021a16',
+        });
+        const blob = await new Promise<Blob | null>((res) =>
+          canvas.toBlob(res, 'image/png')
+        );
+        if (blob) {
+          file = new File([blob], 'fpl-awards.png', { type: 'image/png' });
+        }
+      }
+
+      const shareData: ShareData = {
+        text: 'Ready for the FPL Mini League Awards? 🏆',
+        url: CTA_URL,
+        ...(file && navigator.canShare?.({ files: [file] }) ? { files: [file] } : {}),
+      };
+
+      if (navigator.share) {
+        await navigator.share(shareData);
+        setLabel('idle');
+      } else {
+        await copyAndFeedback();
+      }
+    } catch (err) {
+      // User cancelled share — don't fall through to clipboard
+      if (err instanceof Error && err.name === 'AbortError') {
+        setLabel('idle');
+        return;
+      }
+      await copyAndFeedback();
+    }
+  }, [label, cardRef]);
+
+  const buttonLabel =
+    label === 'loading' ? 'Preparing…' :
+    label === 'copied'  ? 'Link copied!' :
+    '↗ Share the Awards';
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}>
+      <button
+        onClick={handleShare}
+        disabled={label === 'loading'}
+        style={{
+          width: '100%',
+          padding: '14px 24px',
+          borderRadius: 12,
+          background: label === 'copied' ? 'rgba(0,255,194,0.7)' : 'var(--brand-secondary)',
+          color: 'var(--brand-primary)',
+          fontFamily: 'var(--font-heading)',
+          fontSize: 16,
+          fontWeight: 700,
+          border: 'none',
+          cursor: label === 'loading' ? 'default' : 'pointer',
+          transition: 'background 0.2s, opacity 0.2s',
+          opacity: label === 'loading' ? 0.7 : 1,
+        }}
+      >
+        {buttonLabel}
+      </button>
+      <a
+        href="https://gameweekxi.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          textAlign: 'center',
+          fontFamily: 'var(--font-body)',
+          fontSize: 13,
+          color: 'var(--brand-text-muted)',
+          opacity: 0.6,
+          textDecoration: 'none',
+        }}
+      >
+        Find out more about Gameweek XI
+      </a>
     </div>
   );
 }
