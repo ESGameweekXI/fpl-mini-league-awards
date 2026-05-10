@@ -188,7 +188,7 @@ export default function AwardCarousel({
         />
 
         {isCTA ? (
-          <CTASlide />
+          <CTASlide cardRef={ctaShareCardRef} />
         ) : (
           <AwardCard award={award!} leagueName={leagueName} mode="display" />
         )}
@@ -207,7 +207,28 @@ export default function AwardCarousel({
         }}
       >
         {isCTA ? (
-          <CTAShareButton cardRef={ctaShareCardRef} />
+          <a
+            href="https://gameweekxi.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'block',
+              width: '100%',
+              padding: '14px 24px',
+              borderRadius: 12,
+              background: 'transparent',
+              border: '1.5px solid var(--brand-secondary)',
+              color: 'var(--brand-secondary)',
+              fontFamily: 'var(--font-heading)',
+              fontSize: 16,
+              fontWeight: 700,
+              textAlign: 'center',
+              textDecoration: 'none',
+              boxSizing: 'border-box',
+            }}
+          >
+            Find out more about Gameweek XI
+          </a>
         ) : (
           <>
             {/* Powered by Gameweek XI */}
@@ -336,7 +357,7 @@ export default function AwardCarousel({
 
 // ── CTASlide ──────────────────────────────────────────────────────
 
-function CTASlide() {
+function CTASlide({ cardRef }: { cardRef: React.RefObject<HTMLDivElement | null> }) {
   return (
     <div
       style={{
@@ -381,6 +402,7 @@ function CTASlide() {
       >
         Share with your friends
       </div>
+      <CTAShareButton cardRef={cardRef} />
       <div
         style={{
           fontFamily: 'var(--font-body)',
@@ -391,7 +413,7 @@ function CTASlide() {
           opacity: 0.65,
         }}
       >
-        Share &amp; follow @GameweekXI on X to win a football shirt 🎽
+        Share &amp; follow @GameweekXI on X to win a football shirt of your choice
       </div>
     </div>
   );
@@ -472,42 +494,25 @@ function CTAShareButton({
     '↗ Share the Awards';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}>
-      <button
-        onClick={handleShare}
-        disabled={label === 'loading'}
-        style={{
-          width: '100%',
-          padding: '14px 24px',
-          borderRadius: 12,
-          background: label === 'copied' ? 'rgba(0,255,194,0.7)' : 'var(--brand-secondary)',
-          color: 'var(--brand-primary)',
-          fontFamily: 'var(--font-heading)',
-          fontSize: 16,
-          fontWeight: 700,
-          border: 'none',
-          cursor: label === 'loading' ? 'default' : 'pointer',
-          transition: 'background 0.2s, opacity 0.2s',
-          opacity: label === 'loading' ? 0.7 : 1,
-        }}
-      >
-        {buttonLabel}
-      </button>
-      <a
-        href="https://gameweekxi.com"
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{
-          textAlign: 'center',
-          fontFamily: 'var(--font-body)',
-          fontSize: 13,
-          color: 'var(--brand-text-muted)',
-          opacity: 0.6,
-          textDecoration: 'none',
-        }}
-      >
-        Find out more about Gameweek XI
-      </a>
-    </div>
+    <button
+      onClick={handleShare}
+      disabled={label === 'loading'}
+      style={{
+        width: '100%',
+        padding: '14px 24px',
+        borderRadius: 12,
+        background: label === 'copied' ? 'rgba(0,255,194,0.7)' : 'var(--brand-secondary)',
+        color: 'var(--brand-primary)',
+        fontFamily: 'var(--font-heading)',
+        fontSize: 16,
+        fontWeight: 700,
+        border: 'none',
+        cursor: label === 'loading' ? 'default' : 'pointer',
+        transition: 'background 0.2s, opacity 0.2s',
+        opacity: label === 'loading' ? 0.7 : 1,
+      }}
+    >
+      {buttonLabel}
+    </button>
   );
 }
