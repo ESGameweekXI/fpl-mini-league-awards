@@ -7,7 +7,6 @@ import { computeAwardsFromManagerData } from '@/lib/awards';
 import {
   EntryData,
   ClassicLeague,
-  LeagueStandings,
   Bootstrap,
   GWLive,
   AwardResult,
@@ -51,31 +50,24 @@ export default function FplAwardsPage() {
         return;
       }
 
-      // Fetch standings for every classic league to check size
-      const classicLeagues = entry.leagues.classic;
-      const standingsResults = await Promise.allSettled(
-        classicLeagues.map((l) =>
-          fetchFPL<LeagueStandings>(`leagues-classic/${l.id}/standings/`)
-        )
-      );
+      const SYSTEM_LEAGUE_PATTERNS = [
+        'overall', 'england', 'scotland', 'wales', 'northern ireland',
+        'gameweek', 'sky sports', 'tnt sports', 'second chance',
+        'top 10%', 'top 50%', 'top 1%', 'invitational', 'cup',
+        'division', 'most transferred', 'most popular',
+      ];
 
-      const filteredLeagues = classicLeagues.filter((_, i) => {
-        const result = standingsResults[i];
-        if (result.status === 'rejected') return true;
-        const { standings } = result.value;
-        const count = standings.count ?? standings.results.length;
-        return count <= 100;
+      const allLeagues = entry.leagues.classic;
+      const filteredLeagues = allLeagues.filter((league) => {
+        const name = league.name.toLowerCase();
+        return !SYSTEM_LEAGUE_PATTERNS.some((pattern) => name.includes(pattern));
       });
 
-      if (filteredLeagues.length === 0) {
-        setStage({
-          type: 'error',
-          message: 'No classic leagues with 100 or fewer managers found for this team.',
-        });
-        return;
-      }
-
-      setStage({ type: 'league-select', entry, filteredLeagues });
+      setStage({
+        type: 'league-select',
+        entry,
+        filteredLeagues: filteredLeagues.length > 0 ? filteredLeagues : allLeagues,
+      });
     } catch {
       setStage({
         type: 'error',
