@@ -2,6 +2,7 @@
 import { supabaseServer } from './server-client';
 import type {
   Bootstrap,
+  LeagueStanding,
   LeagueStandings,
   ManagerHistory,
   GWPicks,
@@ -157,11 +158,22 @@ export async function syncLeague(
   onProgress?.(8, 'Fetching league standings…');
 
   // ── Phase 2: League & managers (8 → 12%) ────────────────────────
-  const standings = await fetchFPLDirect<LeagueStandings>(
-    `leagues-classic/${leagueId}/standings/`
-  );
-  const leagueName = standings.league.name;
-  const leagueManagers = standings.standings.results.slice(0, 20);
+  let page = 1;
+  let hasNext = true;
+  const allStandings: LeagueStanding[] = [];
+  let leagueName = '';
+
+  while (hasNext) {
+    const pageData = await fetchFPLDirect<LeagueStandings>(
+      `leagues-classic/${leagueId}/standings/?page_standings=${page}`
+    );
+    if (page === 1) leagueName = pageData.league.name;
+    allStandings.push(...pageData.standings.results);
+    hasNext = pageData.standings.has_next;
+    page++;
+  }
+
+  const leagueManagers = allStandings;
   const managerIds = leagueManagers.map((m) => m.entry);
 
   await mustUpsert(
