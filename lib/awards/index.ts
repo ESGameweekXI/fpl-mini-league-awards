@@ -20,7 +20,7 @@ import { calcCaptainKiller } from './captainKiller';
 import { calcSheep } from './sheep';
 import { calcSniper } from './sniper';
 import { calcLoyalist } from './loyalist';
-import { calcMoneyPit } from './moneyPit';
+import { calcDifferentialKing } from './differentialKing';
 
 export type ProgressCallback = (progress: number, status: string) => void;
 
@@ -190,7 +190,7 @@ export async function computeAllAwards(
     calcSheep(viableManagers, finishedGws),
     calcSniper(viableManagers),
     calcLoyalist(viableManagers),
-    calcMoneyPit(viableManagers, bootstrap),
+    calcDifferentialKing(viableManagers, gwLiveMap, finishedGws),
   ];
 
   onProgress?.(1, 'Done!');
@@ -228,6 +228,6 @@ export function computeAwardsFromManagerData(
     calcSheep(viableManagers, finishedGws),
     calcSniper(viableManagers),
     calcLoyalist(viableManagers),
-    calcMoneyPit(viableManagers, bootstrap),
+    calcDifferentialKing(viableManagers, gwLive, finishedGws),
   ];
 }

@@ -11,7 +11,7 @@ const AWARD_ICONS: Record<string, string> = {
   sheep: '🐑',
   sniper: '🎯',
   loyalist: '🤝',
-  'money-pit': '💸',
+  'differential-king': '🎯',
 };
 
 interface AwardCardProps {
