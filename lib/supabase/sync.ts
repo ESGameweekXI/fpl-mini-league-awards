@@ -29,7 +29,11 @@ const FPL_HEADERS: HeadersInit = {
 async function fetchFPLDirect<T>(path: string): Promise<T> {
   let lastErr: unknown;
   for (let attempt = 0; attempt < 2; attempt++) {
-    if (attempt > 0) await new Promise((r) => setTimeout(r, 1000));
+    if (attempt > 0) {
+      const is429 =
+        lastErr instanceof Error && lastErr.message.includes('429');
+      await new Promise((r) => setTimeout(r, is429 ? 5000 : 1000));
+    }
     try {
       const res = await fetch(`${FPL_API}/${path}`, {
         headers: FPL_HEADERS,
@@ -59,6 +63,9 @@ async function batchFetchDirect<T>(
       results.push(r.status === 'fulfilled' ? r.value : null);
     }
     onBatch?.(Math.min(i + batchSize, paths.length), paths.length);
+    if (i + batchSize < paths.length) {
+      await new Promise((r) => setTimeout(r, 300));
+    }
   }
   return results;
 }
