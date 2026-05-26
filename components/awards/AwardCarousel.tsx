@@ -568,7 +568,7 @@ function SlideShareButton({
         position: 'relative',
       }}
     >
-      {sharing ? 'Sharing...' : 'Share slide'}
+      {sharing ? 'Sharing...' : 'Share award'}
     </button>
   );
 }
