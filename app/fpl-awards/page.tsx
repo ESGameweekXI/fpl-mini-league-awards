@@ -55,6 +55,13 @@ export default function FplAwardsPage() {
         'gameweek', 'sky sports', 'tnt sports', 'second chance',
         'top 10%', 'top 50%', 'top 1%', 'invitational', 'cup',
         'division', 'most transferred', 'most popular',
+        // Premier League clubs (supporter leagues)
+        'arsenal', 'aston villa', 'bournemouth', 'brentford', 'brighton',
+        'chelsea', 'crystal palace', 'everton', 'fulham', 'ipswich',
+        'leicester', 'liverpool', 'man city', 'manchester city',
+        'man utd', 'manchester united', 'newcastle', 'nottingham',
+        'southampton', 'spurs', 'tottenham', 'west ham', 'wolves',
+        'wolverhampton',
       ];
 
       const allLeagues = entry.leagues.classic;
