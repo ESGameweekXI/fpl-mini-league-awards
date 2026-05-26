@@ -61,7 +61,7 @@ export default function FplAwardsPage() {
 
       const filteredLeagues = classicLeagues.filter((_, i) => {
         const result = standingsResults[i];
-        if (result.status === 'rejected') return false;
+        if (result.status === 'rejected') return true;
         const { standings } = result.value;
         const count = standings.count ?? standings.results.length;
         return count <= 100;
