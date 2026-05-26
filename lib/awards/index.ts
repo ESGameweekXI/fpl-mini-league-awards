@@ -69,7 +69,6 @@ export async function computeAllAwards(
   // Build all URL paths
   const historyPaths = managers.map((m) => `entry/${m.id}/history/`);
   const transferPaths = managers.map((m) => `entry/${m.id}/transfers/`);
-  const gwLivePaths = finishedGws.map((gw) => `event/${gw}/live/`);
 
   // Per-manager per-GW picks URLs
   const picksMeta: Array<{ managerId: number; gw: number }> = [];
@@ -85,7 +84,6 @@ export async function computeAllAwards(
   const totalCalls =
     historyPaths.length +
     transferPaths.length +
-    gwLivePaths.length +
     picksPaths.length;
 
   let completedCalls = 0;
@@ -117,13 +115,13 @@ export async function computeAllAwards(
     makeProgressHandler('Fetching transfer histories…', transferPaths.length)
   );
 
-  // Fetch GW live data
-  onProgress?.(0.3, 'Fetching gameweek live scores…');
-  const gwLiveResults = await batchFetch<GWLive>(
-    gwLivePaths,
-    10,
-    makeProgressHandler('Fetching gameweek live scores…', gwLivePaths.length)
-  );
+  // Load GW live data from Supabase
+  onProgress?.(0.3, 'Loading player stats…');
+  const { supabaseServer } = await import('../supabase/server-client');
+  const { data: playerStats } = await supabaseServer
+    .from('player_gameweek_stats')
+    .select('player_id, event, total_points')
+    .in('event', finishedGws);
 
   // Fetch all picks
   onProgress?.(0.4, 'Fetching squad picks…');
@@ -135,11 +133,32 @@ export async function computeAllAwards(
 
   onProgress?.(0.96, 'Processing data…');
 
-  // Build gwLive map
+  // Build gwLive map from Supabase player stats
   const gwLiveMap: Record<number, GWLive | null> = {};
-  finishedGws.forEach((gw, i) => {
-    gwLiveMap[gw] = gwLiveResults[i];
-  });
+  for (const gw of finishedGws) {
+    const gwStats = playerStats?.filter((s) => Number(s.event) === gw) ?? [];
+    gwLiveMap[gw] = gwStats.length > 0
+      ? {
+          elements: gwStats.map((s) => ({
+            id: Number(s.player_id),
+            stats: {
+              total_points: Number(s.total_points),
+              minutes: 0,
+              goals_scored: 0,
+              assists: 0,
+              clean_sheets: 0,
+              goals_conceded: 0,
+              yellow_cards: 0,
+              red_cards: 0,
+              saves: 0,
+              bonus: 0,
+              bps: 0,
+            },
+            explain: [],
+          })),
+        }
+      : null;
+  }
 
   // Build manager data
   const managerDataList: ManagerData[] = managers.map((manager, mi) => {

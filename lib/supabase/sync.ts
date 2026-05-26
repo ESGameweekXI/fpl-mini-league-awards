@@ -301,7 +301,7 @@ export async function syncLeague(
     5,
     (done, total) =>
       onProgress?.(
-        42 + (done / total) * 58,
+        42 + (done / total) * 43,
         `Fetching squad picks… (${done}/${total})`
       )
   );
@@ -338,6 +338,36 @@ export async function syncLeague(
   console.log(`[picks] summary: ${picksMeta.length} expected, ${nullCount} null fetches, ${emptyCount} empty arrays, ${pickRows.length} rows to upsert`);
 
   await chunkedUpsert('manager_picks', pickRows, 'manager_id,event,element');
+
+  onProgress?.(85, 'Syncing player gameweek stats…');
+
+  // ── Phase 6: Player gameweek stats (85 → 100%) ───────────────────
+  const gwLivePaths = finishedGws.map((gw) => `event/${gw}/live/`);
+  const gwLiveResults = await batchFetchDirect<{
+    elements: Array<{ id: number; stats: { total_points: number; minutes: number } }>;
+  }>(
+    gwLivePaths,
+    5,
+    (done, total) =>
+      onProgress?.(85 + (done / total) * 15, 'Syncing player gameweek stats…')
+  );
+
+  const statsRows: object[] = [];
+  for (let i = 0; i < finishedGws.length; i++) {
+    const gw = finishedGws[i];
+    const live = gwLiveResults[i];
+    if (!live) continue;
+    for (const el of live.elements) {
+      statsRows.push({
+        player_id: el.id,
+        event: gw,
+        total_points: el.stats.total_points ?? 0,
+        minutes: el.stats.minutes ?? 0,
+      });
+    }
+  }
+
+  await chunkedUpsert('player_gameweek_stats', statsRows, 'player_id,event');
 
   onProgress?.(100, 'Sync complete');
 
