@@ -156,3 +156,29 @@ export async function getLeagueManagers(
     } satisfies ManagerData;
   });
 }
+
+// ── Player gameweek stats ─────────────────────────────────────────
+
+export async function getPlayerGwStats(): Promise<
+  Array<{ player_id: number; event: number; total_points: number }>
+> {
+  const { data: gwData } = await supabase
+    .from('gameweeks')
+    .select('id')
+    .eq('finished', true);
+
+  const finishedGwIds = (gwData ?? []).map((g) => g.id as number);
+  if (finishedGwIds.length === 0) return [];
+
+  const { data, error } = await supabase
+    .from('player_gameweek_stats')
+    .select('player_id, event, total_points')
+    .in('event', finishedGwIds);
+
+  if (error) throw new Error(`getPlayerGwStats: ${error.message}`);
+  return (data ?? []).map((r) => ({
+    player_id: Number(r.player_id),
+    event: Number(r.event),
+    total_points: Number(r.total_points),
+  }));
+}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { fetchFPL, batchFetch } from '@/lib/fpl/fetcher';
+import { fetchFPL } from '@/lib/fpl/fetcher';
 import { clearBootstrapCache } from '@/lib/fpl/bootstrap';
 import { computeAwardsFromManagerData } from '@/lib/awards';
 import {
@@ -149,40 +149,53 @@ export default function FplAwardsPage() {
           }
         }
 
-        // 3. Load manager data from Supabase via server route (80 → 85%)
+        // 3. Load manager data + player stats from Supabase (80 → 88%)
         tick(0.82, 'Loading league data…');
         const leagueDataRes = await fetch(`/api/league-data?leagueId=${leagueId}`);
         if (!leagueDataRes.ok) throw new Error('Failed to load league data.');
-        const { managers } = (await leagueDataRes.json()) as { managers: ManagerData[] };
+        const { managers, playerStats } = (await leagueDataRes.json()) as {
+          managers: ManagerData[];
+          playerStats: Array<{ player_id: number; event: number; total_points: number }>;
+        };
         if (managers.length === 0) {
           throw new Error('No manager data found. Try syncing again.');
         }
 
-        // 4. Fetch bootstrap + GW live scores (85 → 96%)
-        tick(0.86, 'Fetching gameweek data…');
+        // 4. Fetch bootstrap for finishedGws (88 → 92%)
+        tick(0.88, 'Fetching bootstrap…');
         const bootstrap = await fetchFPL<Bootstrap>('bootstrap-static/');
         const finishedGws = bootstrap.events
           .filter((e) => e.finished)
           .map((e) => e.id);
 
-        const gwLivePaths = finishedGws.map((gw) => `event/${gw}/live/`);
-        const gwLiveResults = await batchFetch<GWLive>(
-          gwLivePaths,
-          10,
-          (p) => tick(0.86 + p * 0.1, 'Fetching live scores…')
-        );
-
+        // Build gwLiveMap from Supabase player stats
         const gwLiveMap: Record<number, GWLive | null> = {};
-        finishedGws.forEach((gw, i) => {
-          gwLiveMap[gw] = gwLiveResults[i];
-        });
+        for (const gw of finishedGws) {
+          const gwStats = playerStats.filter((s) => s.event === gw);
+          gwLiveMap[gw] = gwStats.length > 0
+            ? {
+                elements: gwStats.map((s) => ({
+                  id: s.player_id,
+                  stats: {
+                    total_points: s.total_points,
+                    minutes: 0,
+                    goals_scored: 0,
+                    assists: 0,
+                    clean_sheets: 0,
+                    goals_conceded: 0,
+                    yellow_cards: 0,
+                    red_cards: 0,
+                    saves: 0,
+                    bonus: 0,
+                    bps: 0,
+                  },
+                  explain: [],
+                })),
+              }
+            : null;
+        }
 
-        const nullLive = gwLiveResults.filter((r) => r === null).length;
-        console.log(
-          `[gwLive] fetched ${finishedGws.length} finished GWs: ${gwLiveResults.length - nullLive} successful, ${nullLive} null`
-        );
-
-        // 5. Compute awards (96 → 100%)
+        // 5. Compute awards (92 → 100%)
         tick(0.97, 'Calculating awards…');
         const results = computeAwardsFromManagerData(
           managers,

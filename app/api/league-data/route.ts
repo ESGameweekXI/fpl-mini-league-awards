@@ -1,5 +1,5 @@
 import type { NextRequest } from 'next/server';
-import { getLeagueManagers } from '@/lib/supabase/queries';
+import { getLeagueManagers, getPlayerGwStats } from '@/lib/supabase/queries';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,8 +16,11 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const managers = await getLeagueManagers(leagueId);
-    return Response.json({ managers });
+    const [managers, playerStats] = await Promise.all([
+      getLeagueManagers(leagueId),
+      getPlayerGwStats(),
+    ]);
+    return Response.json({ managers, playerStats });
   } catch (err) {
     return Response.json(
       { error: err instanceof Error ? err.message : 'Failed to load league data' },
