@@ -349,6 +349,7 @@ export async function syncLeague(
         multiplier: pick.multiplier,
         is_captain: pick.is_captain,
         is_vice_captain: pick.is_vice_captain,
+        active_chip: gwPicks.active_chip ?? null,
       });
     }
   }
