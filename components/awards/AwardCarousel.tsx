@@ -413,7 +413,7 @@ function CTASlide({ cardRef }: { cardRef: React.RefObject<HTMLDivElement | null>
           opacity: 0.65,
         }}
       >
-        Share &amp; follow @GameweekXI on X to win a football shirt of your choice
+        Share &amp; follow @GameweekXI on X for a chance to win a football shirt of your choice
       </div>
     </div>
   );
