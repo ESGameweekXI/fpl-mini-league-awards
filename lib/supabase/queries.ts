@@ -45,7 +45,7 @@ export async function getLeagueManagers(
   const managerIds = lmRows.map((r) => r.manager_id as number);
 
   // 2. Fetch manager details, history, picks, transfers in parallel
-  // .range(0, 19999) explicitly overrides Supabase's default 1000-row cap
+  // .range(0, 99999) explicitly overrides Supabase's default 1000-row cap
   const [managersRes, historyRes, picksRes, transfersRes] = await Promise.all([
     supabase
       .from('managers')
@@ -56,21 +56,21 @@ export async function getLeagueManagers(
       .select('manager_id, event, points, total_points, rank, overall_rank')
       .in('manager_id', managerIds)
       .order('event', { ascending: true })
-      .range(0, 19999),
+      .range(0, 99999),
     supabase
       .from('manager_picks')
       .select(
         'manager_id, event, element, position, multiplier, is_captain, is_vice_captain'
       )
       .in('manager_id', managerIds)
-      .range(0, 19999),
+      .range(0, 99999),
     supabase
       .from('manager_transfers')
       .select(
         'manager_id, event, element_in, element_in_cost, element_out, element_out_cost, time'
       )
       .in('manager_id', managerIds)
-      .range(0, 19999),
+      .range(0, 99999),
   ]);
 
   if (managersRes.error) throw new Error(`managers query: ${managersRes.error.message}`);
