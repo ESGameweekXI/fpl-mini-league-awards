@@ -318,8 +318,7 @@ function InputScreen({
           className="text-xs"
           style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-body)' }}
         >
-          Find it in the URL when you visit the FPL website: fantasy.premierleague.com/entry/
-          <strong>XXXXXXX</strong>
+          Find it on the FPL site, under Points — fantasy.premierleague.com/entry/<strong>XXXXXXX</strong>
         </p>
       </div>
 
