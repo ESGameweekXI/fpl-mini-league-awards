@@ -3,7 +3,23 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'FPL Mini-League Awards',
-  description: 'Spotify Wrapped for your Fantasy Premier League mini-league',
+  description: 'Let the awards ceremony commence for your FPL mini-league',
+  openGraph: {
+    title: 'FPL Mini-League Awards',
+    description: 'Let the awards ceremony commence for your FPL mini-league',
+    url: 'https://fpl-mini-league-awards.vercel.app',
+    images: [{ url: 'https://fpl-mini-league-awards.vercel.app/gameweek-logo.png', width: 512, height: 512 }],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'FPL Mini-League Awards',
+    description: 'Let the awards ceremony commence for your FPL mini-league',
+    images: ['https://fpl-mini-league-awards.vercel.app/gameweek-logo.png'],
+  },
+  icons: {
+    icon: '/gameweek-logo.png',
+    apple: '/gameweek-logo.png',
+  },
 };
 
 export default function RootLayout({

@@ -448,7 +448,7 @@ function CTAShareButton({
       if (navigator.share) {
         await navigator.share({
           title: 'FPL Mini-League Awards',
-          text: 'Check out the FPL Mini-League Awards',
+          text: 'Let the awards ceremony commence for your FPL mini-league',
           url: window.location.href,
         });
         setLabel('idle');
