@@ -6,7 +6,7 @@ import { AwardResult } from '@/lib/fpl/types';
 const AWARD_ICONS: Record<string, string> = {
   'bench-warmer': '🪑',
   'revolving-door': '🔄',
-  'wrong-armband': '💩',
+  'chip-master': '🎰',
   'captain-killer': '☠️',
   sheep: '🐑',
   sniper: '🎯',

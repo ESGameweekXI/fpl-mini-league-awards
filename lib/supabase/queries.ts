@@ -59,7 +59,7 @@ export async function getLeagueManagers(
     supabase
       .from('manager_picks')
       .select(
-        'manager_id, event, element, position, multiplier, is_captain, is_vice_captain'
+        'manager_id, event, element, position, multiplier, is_captain, is_vice_captain, active_chip'
       )
       .in('manager_id', managerIds)
 ,
@@ -114,7 +114,7 @@ export async function getLeagueManagers(
       const gw = Number(row.event);
       if (!picksMap[gw]) {
         picksMap[gw] = {
-          active_chip: null,
+          active_chip: (row.active_chip as string | null) ?? null,
           entry_history: {
             event: gw,
             points: 0,

@@ -15,7 +15,7 @@ import {
 } from '../fpl/types';
 import { calcBenchWarmer } from './benchWarmer';
 import { calcRevolvingDoor } from './revolvingDoor';
-import { calcWrongArmband } from './wrongArmband';
+import { calcChipMaster } from './chipMaster';
 import { calcCaptainKiller } from './captainKiller';
 import { calcSheep } from './sheep';
 import { calcSniper } from './sniper';
@@ -204,7 +204,7 @@ export async function computeAllAwards(
   const awards: AwardResult[] = [
     calcBenchWarmer(viableManagers, gwLiveMap, finishedGws),
     calcRevolvingDoor(viableManagers),
-    calcWrongArmband(viableManagers, gwLiveMap, finishedGws),
+    calcChipMaster(viableManagers, gwLiveMap, finishedGws),
     calcCaptainKiller(viableManagers, gwLiveMap, finishedGws),
     calcSheep(viableManagers, finishedGws),
     calcSniper(viableManagers),
@@ -242,7 +242,7 @@ export function computeAwardsFromManagerData(
   return [
     calcBenchWarmer(viableManagers, gwLive, finishedGws),
     calcRevolvingDoor(viableManagers),
-    calcWrongArmband(viableManagers, gwLive, finishedGws),
+    calcChipMaster(viableManagers, gwLive, finishedGws),
     calcCaptainKiller(viableManagers, gwLive, finishedGws),
     calcSheep(viableManagers, finishedGws),
     calcSniper(viableManagers),
