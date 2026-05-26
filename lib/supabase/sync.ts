@@ -299,11 +299,13 @@ export async function syncLeague(
   const finishedGws = bootstrap.events
     .filter((e) => e.finished)
     .map((e) => e.id);
+  console.log('[phase5] finishedGws count:', finishedGws.length);
 
   const picksMeta: Array<{ managerId: number; gw: number }> = [];
   const picksPaths: string[] = [];
 
   for (const managerId of managerIds) {
+    console.log('[phase5] processing manager:', managerId);
     const startedEvent = startedEvents[managerId] ?? 1;
     console.log(`[picks] manager ${managerId}: startedEvent=${startedEvent} (${startedEvents[managerId] === undefined ? 'defaulted' : 'from history'})`);
     for (const gw of finishedGws) {
