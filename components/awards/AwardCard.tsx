@@ -19,6 +19,7 @@ interface AwardCardProps {
   leagueName: string;
   mode?: 'display' | 'export';
   cardRef?: React.Ref<HTMLDivElement>;
+  shareSlot?: React.ReactNode;
 }
 
 export default function AwardCard({
@@ -26,6 +27,7 @@ export default function AwardCard({
   leagueName,
   mode = 'display',
   cardRef,
+  shareSlot,
 }: AwardCardProps) {
   const icon = AWARD_ICONS[award.id] ?? '🏆';
 
@@ -79,6 +81,7 @@ export default function AwardCard({
         >
           {winnerNames}
         </div>
+        {shareSlot}
         <div
           style={{
             fontFamily: 'var(--font-heading)',

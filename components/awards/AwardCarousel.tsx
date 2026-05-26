@@ -2,7 +2,6 @@
 
 import { useRef, useState, useEffect, useCallback } from 'react';
 import AwardCard from './AwardCard';
-import ShareButton from './ShareButton';
 import { AwardResult } from '@/lib/fpl/types';
 import '@/styles/awards.css';
 
@@ -190,7 +189,17 @@ export default function AwardCarousel({
         {isCTA ? (
           <CTASlide cardRef={ctaShareCardRef} />
         ) : (
-          <AwardCard award={award!} leagueName={leagueName} mode="display" />
+          <AwardCard
+            award={award!}
+            leagueName={leagueName}
+            mode="display"
+            shareSlot={
+              <SlideShareButton
+                exportCardRef={exportCardRef}
+                awardId={award!.id}
+              />
+            }
+          />
         )}
       </div>
 
@@ -230,41 +239,32 @@ export default function AwardCarousel({
             Find out more about Gameweek XI
           </a>
         ) : (
-          <>
-            {/* Powered by Gameweek XI */}
-            <div
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+            }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/gameweek-logo.png"
+              alt="Gameweek XI"
+              width={20}
+              height={20}
+              style={{ objectFit: 'contain' }}
+            />
+            <span
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
+                color: 'var(--brand-text-muted)',
+                fontFamily: 'var(--font-body)',
+                fontSize: 12,
               }}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/gameweek-logo.png"
-                alt="Gameweek XI"
-                width={20}
-                height={20}
-                style={{ objectFit: 'contain' }}
-              />
-              <span
-                style={{
-                  color: 'var(--brand-text-muted)',
-                  fontFamily: 'var(--font-body)',
-                  fontSize: 12,
-                }}
-              >
-                Powered by Gameweek XI
-              </span>
-            </div>
-
-            <ShareButton
-              cardRef={exportCardRef}
-              awardId={award!.id}
-              leagueName={leagueName}
-            />
-          </>
+              Powered by Gameweek XI
+            </span>
+          </div>
         )}
       </div>
 
@@ -423,10 +423,8 @@ function CTASlide({ cardRef }: { cardRef: React.RefObject<HTMLDivElement | null>
 
 type ShareLabel = 'idle' | 'loading' | 'copied';
 
-const CTA_URL = 'https://fpl-mini-league-awards.vercel.app';
-
 function CTAShareButton({
-  cardRef,
+  cardRef: _cardRef,
 }: {
   cardRef: React.RefObject<HTMLDivElement | null>;
 }) {
@@ -438,7 +436,7 @@ function CTAShareButton({
 
     const copyAndFeedback = async () => {
       try {
-        await navigator.clipboard.writeText(CTA_URL);
+        await navigator.clipboard.writeText(window.location.href);
         setLabel('copied');
         setTimeout(() => setLabel('idle'), 2000);
       } catch {
@@ -447,51 +445,29 @@ function CTAShareButton({
     };
 
     try {
-      let file: File | undefined;
-
-      if (cardRef.current) {
-        await document.fonts.ready;
-        const html2canvas = (await import('html2canvas')).default;
-        const canvas = await html2canvas(cardRef.current, {
-          width: 1080,
-          height: 1080,
-          useCORS: true,
-          background: '#021a16',
-        });
-        const blob = await new Promise<Blob | null>((res) =>
-          canvas.toBlob(res, 'image/png')
-        );
-        if (blob) {
-          file = new File([blob], 'fpl-awards.png', { type: 'image/png' });
-        }
-      }
-
-      const shareData: ShareData = {
-        text: 'Ready for the FPL Mini League Awards? 🏆',
-        url: CTA_URL,
-        ...(file && navigator.canShare?.({ files: [file] }) ? { files: [file] } : {}),
-      };
-
       if (navigator.share) {
-        await navigator.share(shareData);
+        await navigator.share({
+          title: 'FPL Mini-League Awards',
+          text: 'Check out the FPL Mini-League Awards',
+          url: window.location.href,
+        });
         setLabel('idle');
       } else {
         await copyAndFeedback();
       }
     } catch (err) {
-      // User cancelled share — don't fall through to clipboard
       if (err instanceof Error && err.name === 'AbortError') {
         setLabel('idle');
         return;
       }
       await copyAndFeedback();
     }
-  }, [label, cardRef]);
+  }, [label]);
 
   const buttonLabel =
     label === 'loading' ? 'Preparing…' :
     label === 'copied'  ? 'Link copied!' :
-    '↗ Share the Awards';
+    'Share the Awards';
 
   return (
     <button
@@ -513,6 +489,86 @@ function CTAShareButton({
       }}
     >
       {buttonLabel}
+    </button>
+  );
+}
+
+// ── SlideShareButton ───────────────────────────────────────────────
+
+function SlideShareButton({
+  exportCardRef,
+  awardId,
+}: {
+  exportCardRef: { current: HTMLDivElement | null };
+  awardId: string;
+}) {
+  const [sharing, setSharing] = useState(false);
+
+  const handleShare = useCallback(async () => {
+    if (sharing || !exportCardRef.current) return;
+    setSharing(true);
+
+    try {
+      await document.fonts.ready;
+      const html2canvas = (await import('html2canvas')).default;
+      const canvas = await html2canvas(
+        exportCardRef.current,
+        { background: '#021a16', useCORS: true, scale: 2 } as Html2Canvas.Html2CanvasOptions & { scale: number }
+      );
+      const blob = await new Promise<Blob | null>((res) =>
+        canvas.toBlob(res, 'image/png')
+      );
+      if (!blob) return;
+
+      const file = new File([blob], `${awardId}.png`, { type: 'image/png' });
+
+      if (
+        typeof navigator !== 'undefined' &&
+        'share' in navigator &&
+        navigator.canShare?.({ files: [file] })
+      ) {
+        await navigator.share({ files: [file] });
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${awardId}.png`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    } catch (err) {
+      if (err instanceof Error && err.name !== 'AbortError') {
+        // Non-cancel error — silently ignore
+      }
+    } finally {
+      setSharing(false);
+    }
+  }, [sharing, exportCardRef, awardId]);
+
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        handleShare();
+      }}
+      disabled={sharing}
+      style={{
+        padding: '6px 16px',
+        borderRadius: 999,
+        background: 'transparent',
+        border: '1px solid rgba(255,255,255,0.2)',
+        color: 'var(--brand-text-muted)',
+        fontFamily: 'var(--font-body)',
+        fontSize: 13,
+        fontWeight: 500,
+        cursor: sharing ? 'default' : 'pointer',
+        transition: 'opacity 0.15s',
+        opacity: sharing ? 0.5 : 1,
+        zIndex: 20,
+        position: 'relative',
+      }}
+    >
+      {sharing ? 'Sharing...' : 'Share slide'}
     </button>
   );
 }
