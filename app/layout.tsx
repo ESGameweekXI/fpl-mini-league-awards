@@ -7,14 +7,14 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'FPL Mini-League Awards',
     description: 'Let the awards ceremony commence for your FPL mini-league',
-    url: 'https://fpl-mini-league-awards.vercel.app',
-    images: [{ url: 'https://fpl-mini-league-awards.vercel.app/gameweek-logo.png', width: 512, height: 512 }],
+    url: 'https://awards.fpl-wrapped.com',
+    images: [{ url: 'https://awards.fpl-wrapped.com/gameweek-logo.png', width: 512, height: 512 }],
   },
   twitter: {
     card: 'summary',
     title: 'FPL Mini-League Awards',
     description: 'Let the awards ceremony commence for your FPL mini-league',
-    images: ['https://fpl-mini-league-awards.vercel.app/gameweek-logo.png'],
+    images: ['https://awards.fpl-wrapped.com/gameweek-logo.png'],
   },
   icons: {
     icon: '/gameweek-logo.png',
